@@ -113,9 +113,9 @@
 
     .scorebox {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      min-width: 310px;
+      min-width: 420px;
     }
 
     .score {
@@ -339,47 +339,6 @@
       background: var(--blue-soft);
     }
 
-    .reflection {
-      border-top: 1px solid var(--line);
-      padding-top: 12px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .reflection label {
-      display: block;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 96px;
-      resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      font: inherit;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .pill-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      border-radius: 999px;
-      background: #eef4fb;
-      color: var(--blue);
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
     .kbd {
       display: inline-block;
       min-width: 30px;
@@ -424,7 +383,7 @@
     <header>
       <div>
         <h1>模拟双人协作俄罗斯方块：6个小试次体验</h1>
-        <p class="subtitle">你只负责旋转，模拟伙伴负责左右移动。你们共同控制同一个下落方块，目标是让它落到正确一侧并匹配目标形状。</p>
+      <p class="subtitle">你只负责旋转，模拟伙伴负责左右移动。你们共同控制同一个下落方块：落到左侧是你的得分区域，落到右侧是系统的得分区域。</p>
       </div>
       <div class="badge">施测前情境体验版</div>
     </header>
@@ -438,7 +397,8 @@
           </div>
           <div class="scorebox">
             <div class="score"><span>当前试次</span><b id="trialNo">1 / 3</b></div>
-            <div class="score"><span>成功次数</span><b id="successCount">0</b></div>
+            <div class="score"><span>你的得分</span><b id="ownScore">0</b></div>
+            <div class="score"><span>系统得分</span><b id="systemScore">0</b></div>
             <div class="score"><span>伙伴策略</span><b id="computerMode">稳定配合</b></div>
           </div>
         </div>
@@ -447,7 +407,7 @@
           <aside class="legend">
             <div class="role you"><b>你</b><span>只控制旋转：电脑端用 <span class="kbd">A</span>/<span class="kbd">D</span>，手机点下方两个旋转按钮。</span></div>
             <div class="role computer"><b>模拟伙伴</b><span>只控制左右移动。你不能直接移动方块位置。</span></div>
-            <div class="role goal"><b>共同成功</b><span>伙伴移到目标侧，你把形状转对，才算配合成功。</span></div>
+            <div class="role goal"><b>协作中的竞争</b><span>左侧是你的得分区域，右侧是系统得分区域；伙伴移动会影响最后落在哪一侧。</span></div>
           </aside>
 
           <div class="board-wrap">
@@ -475,11 +435,11 @@
         <h3>为什么这是协作情境</h3>
         <div class="instruction">
           <b>同一个方块由两方共同控制。</b><br>
-          你知道该怎么旋转，但你不能移动；模拟伙伴能移动，但它不会替你旋转。成功依赖双方行为是否配合。
+          你知道该怎么旋转，但你不能移动；模拟伙伴能移动，但它不会替你旋转。命中目标需要双方配合。
         </div>
         <div class="instruction">
           <b>存在轻微竞争/个人表现感。</b><br>
-          屏幕上有左目标和右目标，最后会记录命中哪一侧。你可能会关注“伙伴是不是在按我期待的方向移动”“我是否来得及转对”。
+          屏幕左侧是你的得分区域，右侧是系统得分区域。你可能会关注“伙伴是不是在按我期待的方向移动”“最后得分会落到哪一侧”。
         </div>
 
         <h3>6个小试次</h3>
@@ -492,17 +452,6 @@
           <div class="trial-item" id="trialItem5"><b>试次6：</b>最终综合试次，体验配合后的量表参照。</div>
         </div>
 
-        <div class="reflection">
-          <h3>体验后提示</h3>
-          <div class="pill-row">
-            <span class="pill">合作意愿</span>
-            <span class="pill">信任判断</span>
-            <span class="pill">策略调整</span>
-            <span class="pill">压力/冲突</span>
-          </div>
-          <label for="notes">可选记录：刚才你是否依赖伙伴？是否担心它移动错？你有没有因为它的移动改变旋转策略？</label>
-          <textarea id="notes" placeholder="这里可以给访谈或预试记录使用，不会自动提交。"></textarea>
-        </div>
       </aside>
     </main>
   </div>
@@ -520,7 +469,8 @@
     const trialTitle = document.getElementById("trialTitle");
     const trialHint = document.getElementById("trialHint");
     const trialNo = document.getElementById("trialNo");
-    const successCountEl = document.getElementById("successCount");
+    const ownScoreEl = document.getElementById("ownScore");
+    const systemScoreEl = document.getElementById("systemScore");
     const computerMode = document.getElementById("computerMode");
 
     const gridSize = 21;
@@ -537,7 +487,7 @@
     const trials = [
       {
         title: "试次1：熟悉分工",
-        hint: "模拟伙伴会稳定把方块移向左目标。你需要在下落时把形状转到左目标的方向。",
+        hint: "左侧是你的得分区域。模拟伙伴会稳定把方块移向左侧，你需要把形状转到左目标的方向。",
         mode: "稳定配合",
         block: "L",
         targetSide: "left",
@@ -549,7 +499,7 @@
       },
       {
         title: "试次2：伙伴先犹豫后修正",
-        hint: "模拟伙伴一开始会短暂向另一侧移动，然后修正到右目标。你需要观察它的移动并调整旋转。",
+        hint: "右侧是系统得分区域。模拟伙伴一开始会短暂向左侧移动，然后修正到右侧，你需要观察它的移动并调整旋转。",
         mode: "先犹豫",
         block: "T",
         targetSide: "right",
@@ -561,7 +511,7 @@
       },
       {
         title: "试次3：速度稍快",
-        hint: "模拟伙伴会移向左目标，但下落稍快。你可能会感到时间压力，需要更快判断旋转方向。",
+        hint: "左侧是你的得分区域。模拟伙伴会移向左侧，但下落稍快，你需要更快判断旋转方向。",
         mode: "时间压力",
         block: "S",
         targetSide: "left",
@@ -573,7 +523,7 @@
       },
       {
         title: "试次4：伙伴启动较慢",
-        hint: "模拟伙伴会稍晚开始移动。你可能会一边旋转，一边等待它是否会把方块移到目标侧。",
+        hint: "右侧是系统得分区域。模拟伙伴会稍晚开始移动，你可能会一边旋转，一边等待它是否把方块带向系统得分区。",
         mode: "启动较慢",
         block: "J",
         targetSide: "right",
@@ -585,7 +535,7 @@
       },
       {
         title: "试次5：伙伴短暂偏向另一侧",
-        hint: "模拟伙伴会先靠近非目标侧，再转向左目标。你需要判断它的意图，并决定是否继续按当前方向旋转。",
+        hint: "左侧是你的得分区域。模拟伙伴会先靠近右侧系统得分区，再转向左侧，你需要判断它的意图。",
         mode: "短暂偏向",
         block: "Z",
         targetSide: "left",
@@ -597,7 +547,7 @@
       },
       {
         title: "试次6：综合协作",
-        hint: "最后一个试次速度略快，模拟伙伴会移向右目标。请把刚才的配合、信任和调整体验带入后续量表。",
+        hint: "最后一个试次速度略快，模拟伙伴会移向右侧系统得分区。请把刚才的配合、竞争、信任和调整体验带入后续量表。",
         mode: "综合配合",
         block: "L",
         targetSide: "right",
@@ -615,7 +565,8 @@
       showingTargets: false,
       targetVisible: true,
       completed: false,
-      successCount: 0,
+      ownScore: 0,
+      systemScore: 0,
       pieceX: 10,
       pieceY: 16,
       angle: 0,
@@ -650,6 +601,12 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#fbfdff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "rgba(36, 95, 159, 0.08)";
+      ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+      ctx.fillStyle = "rgba(168, 102, 19, 0.10)";
+      ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+
       ctx.strokeStyle = "#dce6f2";
       ctx.lineWidth = 1;
       for (let i = 0; i <= gridSize; i++) {
@@ -674,8 +631,10 @@
 
       ctx.fillStyle = "#607086";
       ctx.font = "bold 14px Microsoft YaHei";
-      ctx.fillText("左目标区", 22, 25);
-      ctx.fillText("右目标区", canvas.width - 82, 25);
+      ctx.fillStyle = "#245f9f";
+      ctx.fillText("左侧：你的得分区域", 22, 25);
+      ctx.fillStyle = "#a86613";
+      ctx.fillText("右侧：系统得分区域", canvas.width - 140, 25);
     }
 
     function drawBlock(points, x, y, fill, stroke = "#111827", alpha = 1) {
@@ -745,7 +704,8 @@
       trialTitle.textContent = trial.title;
       trialHint.textContent = trial.hint;
       trialNo.textContent = `${state.trialIndex + 1} / ${trials.length}`;
-      successCountEl.textContent = String(state.successCount);
+      ownScoreEl.textContent = String(state.ownScore);
+      systemScoreEl.textContent = String(state.systemScore);
       computerMode.textContent = trial.mode;
       for (let i = 0; i < trials.length; i++) {
         document.getElementById(`trialItem${i}`).classList.toggle("active", i === state.trialIndex);
@@ -811,9 +771,13 @@
       if (trial.computer === "hesitate" && elapsed < 2.2) {
         targetX = trial.targetSide === "left" ? 15 : 3;
       }
+      if (elapsed > 0.65) {
+        targetX += Math.sin(elapsed * 3.4) * 0.85;
+      }
       const centerX = state.pieceX + 1;
-      if (centerX < targetX) state.pieceX += 0.08;
-      if (centerX > targetX) state.pieceX -= 0.08;
+      const step = trial.computer === "late" && elapsed < 2.1 ? 0.018 : 0.035;
+      if (centerX < targetX - 0.14) state.pieceX += step;
+      if (centerX > targetX + 0.14) state.pieceX -= step;
       state.pieceX = Math.max(0, Math.min(18, state.pieceX));
     }
 
@@ -845,13 +809,14 @@
       const xOk = Math.abs(Math.round(state.pieceX) - targetX) <= 2;
       const shapeOk = finalShape === targetShape;
       const success = xOk && shapeOk;
-      if (success) state.successCount += 1;
+      if (success && trial.targetSide === "left") state.ownScore += 1;
+      if (success && trial.targetSide === "right") state.systemScore += 1;
       updateSidebar();
       state.targetVisible = true;
       render();
 
       const resultText = success
-        ? "配合成功：模拟伙伴移动到了目标侧，你也把方块转到了目标方向。"
+        ? `配合成功：方块落入${trial.targetSide === "left" ? "你的得分区域" : "系统得分区域"}，并且形状方向匹配目标。`
         : `这次没有完全成功：${xOk ? "位置基本对了" : "伙伴/位置没有到目标侧"}，${shapeOk ? "形状方向对了" : "旋转方向还没匹配目标"}。`;
       const reflection = success
         ? "请留意：成功时，你是否感觉自己依赖了伙伴的移动？是否更愿意信任它？"
@@ -876,9 +841,9 @@
       } else {
         state.completed = true;
         showOverlay(
-          "体验完成，可以填写量表",
-          "你刚才体验了一个模拟双人协作任务：你负责旋转，模拟伙伴负责左右移动。你可能已经感受到配合、依赖、信任判断、策略调整和压力。请根据这种体验回答后续量表。",
-          "重新开始6个试次"
+          "体验完成，请继续填写量表",
+          "你已经完成6个模拟双人协作小试次。请注意：左侧代表你的得分区域，右侧代表系统得分区域。接下来请拉到问卷页面底部，点击右箭头继续，进入后续量表题目。回答时请以刚才的协作与竞争体验为参照。",
+          "我知道了"
         );
         state.trialIndex = 0;
       }
@@ -922,7 +887,8 @@
     startBtn.addEventListener("click", () => {
       if (state.completed) {
         state.trialIndex = 0;
-        state.successCount = 0;
+        state.ownScore = 0;
+        state.systemScore = 0;
         state.completed = false;
         updateSidebar();
         beginTrial();
