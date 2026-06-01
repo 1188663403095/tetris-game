@@ -1,724 +1,952 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>共生 · 双人协作方块</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>模拟双人协作俄罗斯方块：6试次体验</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #607086;
+      --line: #cad7e6;
+      --grid: #dce6f2;
+      --blue: #245f9f;
+      --blue-soft: #e5f0ff;
+      --green: #237a52;
+      --green-soft: #e5f4ec;
+      --amber: #a86613;
+      --amber-soft: #fff1d8;
+      --red: #b83232;
+      --red-soft: #ffe4e4;
+      --target: #171a20;
+      --shadow: 0 18px 42px rgba(20, 35, 60, 0.12);
+    }
 
-:root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #1e2630;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --blue: #3b82f6;
-  --blue-dim: rgba(59,130,246,0.15);
-  --red: #ef4444;
-  --red-dim: rgba(239,68,68,0.15);
-  --green: #22c55e;
-  --yellow: #eab308;
-  --text: #e6edf3;
-  --muted: #7d8590;
-  --cell: 28px;
-  --cols: 21;
-}
+    * { box-sizing: border-box; }
 
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 10px;overflow-x:hidden}
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 18% 0%, #ffffff 0%, var(--bg) 50%, #eaf1f8 100%);
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "DengXian", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0;
+    }
 
-h1{font-family:'Space Mono',monospace;font-size:22px;letter-spacing:0.1em;color:var(--text);margin-bottom:4px}
-.subtitle{font-size:12px;color:var(--muted);margin-bottom:16px;letter-spacing:0.06em}
+    .app {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-#layout{display:flex;gap:14px;align-items:flex-start;width:100%;max-width:1100px}
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
 
-/* sidebar */
-.sidebar{width:180px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
-.panel-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.score-big{font-family:'Space Mono',monospace;font-size:36px;font-weight:700;line-height:1}
-.score-label{font-size:11px;color:var(--muted);margin-top:3px}
-.key-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
-kbd{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:2px 8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text)}
-.info-row{font-size:11px;color:var(--muted);line-height:1.7;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
-.info-row b{color:var(--text)}
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.2;
+    }
 
-#round-info{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
-#round-info span{color:var(--text)}
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
 
-/* stage */
-#stage{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+    .badge {
+      flex: 0 0 auto;
+      background: var(--blue-soft);
+      border: 1px solid #b9d4f5;
+      color: var(--blue);
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 14px;
+    }
 
-#canvas-wrap{position:relative}
-#gameCanvas{display:block;border-radius:8px;border:1px solid var(--border)}
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 16px;
+      align-items: stretch;
+    }
 
-/* phase bar */
-#phase-wrap{width:100%;display:flex;gap:6px;align-items:center}
-.phase-seg{flex:1;height:3px;border-radius:2px;background:var(--border2);transition:background .3s}
-.phase-seg.done{background:var(--blue)}
-.phase-seg.active{background:rgba(59,130,246,.5);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+    .game-card, .side-card {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
 
-#status-box{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;min-height:38px;display:flex;align-items:center;gap:8px}
-.status-phase{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap}
-.status-msg{color:var(--text)}
+    .game-card {
+      padding: 16px;
+    }
 
-#btn-row{display:flex;gap:8px}
-button{font-family:'Noto Sans SC',sans-serif;font-size:13px;padding:8px 20px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s}
-button:hover{background:var(--surface);border-color:var(--blue);color:var(--blue)}
-button:disabled{opacity:.35;cursor:default;border-color:var(--border)}
-#btn-start{background:var(--blue);border-color:var(--blue);color:#fff}
-#btn-start:hover{background:#2563eb;border-color:#2563eb;color:#fff}
+    .topline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
 
-/* right sidebar */
-.right-sidebar{width:170px;flex-shrink:0;display:flex;flex-direction:column;gap:10px}
-.op-list{list-style:none;font-size:12px;line-height:2}
-.op-item{display:flex;align-items:center;gap:6px;color:var(--muted);transition:color .2s}
-.op-item.flash{color:var(--text);animation:flash .4s}
-@keyframes flash{0%{color:#fff}100%{color:var(--muted)}}
-.op-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.result-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;margin-top:4px}
-.badge-match{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
-.badge-miss{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
-.badge-center{background:rgba(234,179,8,.1);color:var(--yellow);border:1px solid rgba(234,179,8,.2)}
+    .status h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      line-height: 1.25;
+    }
 
-/* overlay */
-#overlay{position:fixed;inset:0;background:rgba(13,17,23,.92);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
-#overlay.hidden{display:none}
-.overlay-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:36px 40px;text-align:center;max-width:480px;width:90%}
-.overlay-title{font-family:'Space Mono',monospace;font-size:26px;margin-bottom:8px}
-.overlay-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.8}
-.overlay-scores{display:flex;gap:24px;justify-content:center;margin-bottom:28px}
-.ov-score{text-align:center}
-.ov-num{font-family:'Space Mono',monospace;font-size:40px;font-weight:700}
-.ov-lbl{font-size:12px;color:var(--muted);margin-top:2px}
+    .status p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
 
-/* history */
-.hist-item{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)}
-.hist-item:last-child{border:none}
-</style>
+    .scorebox {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      min-width: 310px;
+    }
+
+    .score {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 8px;
+      padding: 9px 10px;
+      text-align: center;
+    }
+
+    .score span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .score b {
+      font-size: 20px;
+      color: var(--blue);
+    }
+
+    .play-area {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .role {
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 12px;
+      background: #ffffff;
+      line-height: 1.55;
+      min-height: 92px;
+    }
+
+    .role.you { background: var(--blue-soft); border-color: #b9d4f5; }
+    .role.computer { background: var(--amber-soft); border-color: #ecc67e; }
+    .role.goal { background: var(--green-soft); border-color: #a6d8ba; }
+
+    .role b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .role span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .board-wrap {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 12px;
+      min-height: 620px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 600px;
+      margin: 0 auto;
+      background: #fbfdff;
+      border-radius: 6px;
+      border: 1px solid #dde8f4;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .touch-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .touch-btn {
+      min-height: 56px;
+      border-radius: 8px;
+      border: 1px solid #9bbce2;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 18px;
+      font-weight: 900;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .touch-btn:active {
+      transform: translateY(1px);
+      background: #d3e7ff;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(248, 251, 255, 0.9);
+      border-radius: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      width: min(620px, 90%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      text-align: left;
+    }
+
+    .modal h3 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .modal p {
+      margin: 0 0 12px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .modal .small {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #b6c7dc;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      padding: 10px 14px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #ffffff;
+    }
+
+    button:disabled {
+      opacity: 0.52;
+      cursor: not-allowed;
+    }
+
+    .side-card {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .side-card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .instruction {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 12px;
+      line-height: 1.65;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .instruction b {
+      color: var(--ink);
+    }
+
+    .trial-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .trial-item {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 11px 12px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .trial-item.active {
+      border-color: #8ebce8;
+      background: var(--blue-soft);
+    }
+
+    .reflection {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .reflection label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      font: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 999px;
+      background: #eef4fb;
+      color: var(--blue);
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .kbd {
+      display: inline-block;
+      min-width: 30px;
+      padding: 2px 7px;
+      text-align: center;
+      border: 1px solid #aebed2;
+      border-bottom-width: 3px;
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    @media (max-width: 980px) {
+      header { flex-direction: column; align-items: flex-start; }
+      main { grid-template-columns: 1fr; }
+      .play-area { grid-template-columns: 1fr; }
+      .legend { display: grid; grid-template-columns: repeat(3, 1fr); }
+      .scorebox { min-width: 0; }
+    }
+
+    @media (max-width: 680px) {
+      .app { padding: 12px; }
+      h1 { font-size: 24px; }
+      .topline { grid-template-columns: 1fr; }
+      .scorebox { grid-template-columns: 1fr; }
+      .legend { grid-template-columns: 1fr; }
+      .board-wrap { min-height: auto; }
+      .game-card, .side-card { padding: 12px; }
+      .status h2 { font-size: 20px; }
+      .status p { font-size: 14px; }
+      .role { min-height: auto; }
+      .modal { padding: 16px; }
+      .modal h3 { font-size: 19px; }
+      .modal p { font-size: 14px; }
+      .touch-btn { min-height: 62px; font-size: 17px; }
+    }
+  </style>
 </head>
 <body>
-
-<h1>共　生</h1>
-<p class="subtitle">双人协作 · 方块记忆游戏 &nbsp;|&nbsp; 玩家1: A/D旋转 &nbsp; 玩家2: ←/→移动</p>
-
-<div id="layout">
-
-  <!-- Left sidebar -->
-  <div class="sidebar">
-    <div class="panel">
-      <div class="panel-title">玩家1</div>
-      <div class="score-big" id="scoreLeft" style="color:var(--blue)">0</div>
-      <div class="score-label">左侧得分</div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">玩家1 操作</div>
-      <div class="key-row"><kbd>A</kbd> 逆时针旋转</div>
-      <div class="key-row"><kbd>D</kbd> 顺时针旋转</div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">状态</div>
-      <div id="round-info">第 <span id="curRound">1</span> / <span id="totalRounds">3</span> 轮<br>第 <span id="curTrial">1</span> / <span id="totalTrials">6</span> 次</div>
-      <div class="info-row">
-        <b>目标</b>在左/右展示<br>
-        记住后方块落下<br>
-        <b>送到匹配目标处</b>
+  <div class="app">
+    <header>
+      <div>
+        <h1>模拟双人协作俄罗斯方块：6个小试次体验</h1>
+        <p class="subtitle">你只负责旋转，模拟伙伴负责左右移动。你们共同控制同一个下落方块，目标是让它落到正确一侧并匹配目标形状。</p>
       </div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">判分</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.9">
-        落入对应半场<br>
-        形状完全匹配<br>
-        位置误差&lt;1.5格
-      </div>
-    </div>
+      <div class="badge">施测前情境体验版</div>
+    </header>
+
+    <main>
+      <section class="game-card">
+        <div class="topline">
+          <div class="status">
+            <h2 id="trialTitle">试次1：熟悉分工</h2>
+            <p id="trialHint">先记住左右两个目标，随后目标会隐藏。方块下落时，你按 A/D 或触屏按钮旋转，模拟伙伴负责左右移动。</p>
+          </div>
+          <div class="scorebox">
+            <div class="score"><span>当前试次</span><b id="trialNo">1 / 3</b></div>
+            <div class="score"><span>成功次数</span><b id="successCount">0</b></div>
+            <div class="score"><span>伙伴策略</span><b id="computerMode">稳定配合</b></div>
+          </div>
+        </div>
+
+        <div class="play-area">
+          <aside class="legend">
+            <div class="role you"><b>你</b><span>只控制旋转：电脑端用 <span class="kbd">A</span>/<span class="kbd">D</span>，手机点下方两个旋转按钮。</span></div>
+            <div class="role computer"><b>模拟伙伴</b><span>只控制左右移动。你不能直接移动方块位置。</span></div>
+            <div class="role goal"><b>共同成功</b><span>伙伴移到目标侧，你把形状转对，才算配合成功。</span></div>
+          </aside>
+
+          <div class="board-wrap">
+            <canvas id="game" width="560" height="560" aria-label="模拟双人协作俄罗斯方块小任务"></canvas>
+            <div class="touch-controls" aria-label="手机旋转控制">
+              <button class="touch-btn" id="rotateLeftBtn" type="button">⟲ 逆时针</button>
+              <button class="touch-btn" id="rotateRightBtn" type="button">顺时针 ⟳</button>
+            </div>
+            <div class="overlay show" id="overlay">
+              <div class="modal">
+                <h3 id="overlayTitle">开始前请先理解分工</h3>
+                <p id="overlayText">这个体验模拟“你和另一名参与者合作”的实验范式：一个下落方块由两方共同控制。你负责旋转，模拟伙伴负责左右移动。目标会先闪现，然后隐藏。</p>
+                <p class="small">建议被试完成6个小试次后，再填写量表。这样他们回答“信任、配合、策略调整、冲突感”时会有共同参照。</p>
+                <div class="controls">
+                  <button class="primary" id="startBtn" type="button">开始试次1</button>
+                  <button id="demoBtn" type="button">重新看说明</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-card">
+        <h3>为什么这是协作情境</h3>
+        <div class="instruction">
+          <b>同一个方块由两方共同控制。</b><br>
+          你知道该怎么旋转，但你不能移动；模拟伙伴能移动，但它不会替你旋转。成功依赖双方行为是否配合。
+        </div>
+        <div class="instruction">
+          <b>存在轻微竞争/个人表现感。</b><br>
+          屏幕上有左目标和右目标，最后会记录命中哪一侧。你可能会关注“伙伴是不是在按我期待的方向移动”“我是否来得及转对”。
+        </div>
+
+        <h3>6个小试次</h3>
+        <div class="trial-list">
+          <div class="trial-item active" id="trialItem0"><b>试次1：</b>伙伴稳定移动，体验基本协作。</div>
+          <div class="trial-item" id="trialItem1"><b>试次2：</b>伙伴先犹豫后修正，体验信任与调整。</div>
+          <div class="trial-item" id="trialItem2"><b>试次3：</b>速度稍快，体验压力与权衡。</div>
+          <div class="trial-item" id="trialItem3"><b>试次4：</b>伙伴启动较慢，体验等待与依赖。</div>
+          <div class="trial-item" id="trialItem4"><b>试次5：</b>伙伴短暂偏向另一侧，体验意图判断。</div>
+          <div class="trial-item" id="trialItem5"><b>试次6：</b>最终综合试次，体验配合后的量表参照。</div>
+        </div>
+
+        <div class="reflection">
+          <h3>体验后提示</h3>
+          <div class="pill-row">
+            <span class="pill">合作意愿</span>
+            <span class="pill">信任判断</span>
+            <span class="pill">策略调整</span>
+            <span class="pill">压力/冲突</span>
+          </div>
+          <label for="notes">可选记录：刚才你是否依赖伙伴？是否担心它移动错？你有没有因为它的移动改变旋转策略？</label>
+          <textarea id="notes" placeholder="这里可以给访谈或预试记录使用，不会自动提交。"></textarea>
+        </div>
+      </aside>
+    </main>
   </div>
 
-  <!-- Center stage -->
-  <div id="stage">
-    <div id="canvas-wrap">
-      <canvas id="gameCanvas"></canvas>
-    </div>
-    <div id="phase-wrap">
-      <div class="phase-seg" id="ph0"></div>
-      <div class="phase-seg" id="ph1"></div>
-      <div class="phase-seg" id="ph2"></div>
-      <div class="phase-seg" id="ph3"></div>
-    </div>
-    <div id="status-box">
-      <span class="status-phase" id="sPhase">—</span>
-      <span class="status-msg" id="sMsg">点击"开始游戏"进入第一轮</span>
-    </div>
-    <div id="btn-row">
-      <button id="btn-start" onclick="startGame()">开始游戏</button>
-      <button id="btn-restart" onclick="restartGame()" disabled>重新开始</button>
-    </div>
-  </div>
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const overlay = document.getElementById("overlay");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayText = document.getElementById("overlayText");
+    const startBtn = document.getElementById("startBtn");
+    const demoBtn = document.getElementById("demoBtn");
+    const rotateLeftBtn = document.getElementById("rotateLeftBtn");
+    const rotateRightBtn = document.getElementById("rotateRightBtn");
+    const trialTitle = document.getElementById("trialTitle");
+    const trialHint = document.getElementById("trialHint");
+    const trialNo = document.getElementById("trialNo");
+    const successCountEl = document.getElementById("successCount");
+    const computerMode = document.getElementById("computerMode");
 
-  <!-- Right sidebar -->
-  <div class="right-sidebar">
-    <div class="panel">
-      <div class="panel-title">玩家2</div>
-      <div class="score-big" id="scoreRight" style="color:var(--red)">0</div>
-      <div class="score-label">右侧得分</div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">玩家2 操作</div>
-      <div class="key-row"><kbd>←</kbd> 左移一格</div>
-      <div class="key-row"><kbd>→</kbd> 右移一格</div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">本次操作</div>
-      <ul class="op-list" id="opList">
-        <li class="op-item"><span class="op-dot" style="background:var(--muted)"></span><span>尚未开始</span></li>
-      </ul>
-    </div>
-    <div class="panel" id="histPanel">
-      <div class="panel-title">历史记录</div>
-      <div id="histList" style="font-size:11px;color:var(--muted)">—</div>
-    </div>
-  </div>
-</div>
+    const gridSize = 21;
+    const cell = canvas.width / gridSize;
+    const fallInterval = 145;
+    const blocks = {
+      L: [[0,0], [1,0], [2,0], [2,1]],
+      Z: [[0,0], [1,0], [1,1], [2,1]],
+      T: [[0,0], [0,1], [1,1], [2,1]],
+      J: [[0,0], [1,0], [0,1], [0,2]],
+      S: [[0,1], [1,1], [1,0], [2,0]]
+    };
 
-<!-- Overlay -->
-<div id="overlay">
-  <div class="overlay-box">
-    <div class="overlay-title" id="ovTitle">共　生</div>
-    <div class="overlay-sub" id="ovSub">双人协作 · 方块记忆游戏<br><br>
-      <b>玩家1</b> 用 <kbd style="background:#1e2630;border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:1px 6px;font-size:12px">A</kbd> /
-      <kbd style="background:#1e2630;border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:1px 6px;font-size:12px">D</kbd> 旋转方块<br>
-      <b>玩家2</b> 用 <kbd style="background:#1e2630;border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:1px 6px;font-size:12px">←</kbd> /
-      <kbd style="background:#1e2630;border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:1px 6px;font-size:12px">→</kbd> 移动方块<br><br>
-      目标形状闪烁展示后隐藏<br>
-      将方块送到匹配的半场位置
-    </div>
-    <div class="overlay-scores" id="ovScores" style="display:none">
-      <div class="ov-score"><div class="ov-num" id="ovL" style="color:var(--blue)">0</div><div class="ov-lbl">玩家1 左得分</div></div>
-      <div class="ov-score"><div class="ov-num" id="ovR" style="color:var(--red)">0</div><div class="ov-lbl">玩家2 右得分</div></div>
-    </div>
-    <button id="btn-start-overlay" style="font-size:14px;padding:10px 32px;background:var(--blue);border:none;border-radius:8px;color:#fff;cursor:pointer" onclick="startGame()">开始游戏</button>
-  </div>
-</div>
-
-<script>
-// ─── Constants ───────────────────────────────────────────────────────────────
-const GS = 21;
-const CELL = 26;
-const ROWS_VISIBLE = 14;
-const LX = 3, RX = 15;
-const FALL_SPEED = 0.06; // cells per frame
-const BLINK_INTERVAL = 320;
-const BLINK_COUNT = 5;
-const HIDE_DURATION = 500;
-const LOCK_DELAY = 300;
-const N_ROUNDS = 3;
-const TRIALS_PER_ROUND = 6;
-
-const SHAPES = [
-  [[0,0],[1,0],[2,0],[2,1]],
-  [[0,0],[1,0],[1,1],[2,1]],
-  [[0,0],[0,1],[1,1],[2,1]],
-  [[0,0],[1,0],[0,1],[0,2]],
-  [[0,1],[1,1],[1,0],[2,0]],
-];
-
-const COLORS = {
-  falling: '#e2e8f0',
-  leftTgt: '#3b82f6',
-  rightTgt: '#ef4444',
-  match: '#22c55e',
-  miss: '#ef4444',
-  ghost: 'rgba(226,232,240,0.15)',
-};
-
-// ─── State ────────────────────────────────────────────────────────────────────
-let canvas, ctx;
-let gameState = 'idle'; // idle | blink | hide | falling | locking | result | roundbreak | gameover
-let scoreLeft = 0, scoreRight = 0;
-let curRound = 1, curTrial = 1;
-let histLog = [];
-let opCounts = {ML:0, MR:0, RL:0, RR:0};
-let opLogItems = [];
-
-let baseBlock, leftTgt, rightTgt, leftTgtAngle, rightTgtAngle;
-let curBlock, curAngle, curPos, curPosY;
-let blinkTimer, blinkOn = true, blinkTick = 0;
-let fallAnim = null;
-let inputEnabled = false;
-
-// ─── Init canvas ─────────────────────────────────────────────────────────────
-function initCanvas() {
-  canvas = document.getElementById('gameCanvas');
-  canvas.width = GS * CELL;
-  canvas.height = ROWS_VISIBLE * CELL;
-  ctx = canvas.getContext('2d');
-}
-
-// ─── Block utilities ─────────────────────────────────────────────────────────
-function rot90(blk, n) {
-  let a = blk.map(c => [...c]);
-  for (let i = 0; i < (((n % 4) + 4) % 4); i++) a = a.map(([x,y]) => [-y, x]);
-  return a;
-}
-function normalize(blk) {
-  const mx = Math.min(...blk.map(c=>c[0])), my = Math.min(...blk.map(c=>c[1]));
-  return blk.map(([x,y]) => [x-mx, y-my]);
-}
-function blockStr(blk) { return normalize(blk).map(c=>c.join(',')).sort().join('|'); }
-function blockAvgX(blk) { return blk.reduce((s,c)=>s+c[0],0)/blk.length; }
-function blockMinX(blk) { return Math.min(...blk.map(c=>c[0])); }
-function blockMaxX(blk) { return Math.max(...blk.map(c=>c[0])); }
-
-function getRotated() { return normalize(rot90(baseBlock, curAngle)); }
-
-function canPlace(pos, angle) {
-  const rot = normalize(rot90(baseBlock, angle));
-  const mn = blockMinX(rot), mx = blockMaxX(rot);
-  return pos + mn >= 0 && pos + mx < GS;
-}
-
-// ─── Drawing ──────────────────────────────────────────────────────────────────
-function drawAll() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBackground();
-  drawMidline();
-  drawTargets();
-  drawGhost();
-  drawFalling();
-  drawResultFlash();
-}
-
-function drawBackground() {
-  ctx.fillStyle = '#0d1117';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // grid
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  ctx.lineWidth = 0.5;
-  for (let c = 0; c <= GS; c++) {
-    ctx.beginPath(); ctx.moveTo(c*CELL, 0); ctx.lineTo(c*CELL, canvas.height); ctx.stroke();
-  }
-  for (let r = 0; r <= ROWS_VISIBLE; r++) {
-    ctx.beginPath(); ctx.moveTo(0, r*CELL); ctx.lineTo(canvas.width, r*CELL); ctx.stroke();
-  }
-  // half labels
-  ctx.save();
-  ctx.font = '500 11px "Space Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(59,130,246,0.4)';
-  ctx.fillText('← 左半场', (GS/4)*CELL, 13);
-  ctx.fillStyle = 'rgba(239,68,68,0.4)';
-  ctx.fillText('右半场 →', (GS*3/4)*CELL, 13);
-  ctx.restore();
-}
-
-function drawMidline() {
-  const mx = (GS/2)*CELL;
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([6, 5]);
-  ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, canvas.height); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-}
-
-function drawTargets() {
-  if (!leftTgt || !rightTgt) return;
-
-  const phases = ['blink', 'hide', 'falling', 'locking', 'result'];
-  if (!phases.includes(gameState)) return;
-
-  const showFull = gameState === 'blink' && blinkOn;
-  const dimAlpha = (gameState === 'hide') ? 0.08 :
-                   (gameState === 'falling' || gameState === 'locking') ? 0.12 :
-                   (gameState === 'result') ? 0.25 : 0;
-
-  if (showFull) {
-    drawBlock(leftTgt, LX, 0, COLORS.leftTgt, 1);
-    drawBlock(rightTgt, RX, 0, COLORS.rightTgt, 1);
-    // labels
-    ctx.save();
-    ctx.font = '500 10px "Noto Sans SC"';
-    ctx.textAlign = 'center';
-    const lCx = (LX + blockAvgX(leftTgt) + 0.5) * CELL;
-    const rCx = (RX + blockAvgX(rightTgt) + 0.5) * CELL;
-    ctx.fillStyle = COLORS.leftTgt;
-    ctx.fillText('左目标', lCx, canvas.height - 6);
-    ctx.fillStyle = COLORS.rightTgt;
-    ctx.fillText('右目标', rCx, canvas.height - 6);
-    ctx.restore();
-  } else if (dimAlpha > 0) {
-    drawBlock(leftTgt, LX, 0, COLORS.leftTgt, dimAlpha);
-    drawBlock(rightTgt, RX, 0, COLORS.rightTgt, dimAlpha);
-  }
-}
-
-function drawGhost() {
-  if (gameState !== 'falling' || !inputEnabled) return;
-  const rot = getRotated();
-  drawBlock(rot, curPos, Math.round(curPosY), COLORS.ghost, 1);
-}
-
-let resultData = null;
-function drawFalling() {
-  if (!['falling','locking','result'].includes(gameState)) return;
-  const rot = getRotated();
-  let col = COLORS.falling;
-  if (gameState === 'result') {
-    col = resultData && resultData.match ? COLORS.match : COLORS.miss;
-  }
-  const py = gameState === 'result' ? 0 : Math.round(curPosY);
-  drawBlock(rot, curPos, py, col, 1);
-}
-
-function drawResultFlash() {
-  if (gameState !== 'result' || !resultData) return;
-  ctx.save();
-  ctx.font = '700 16px "Space Mono", monospace';
-  ctx.textAlign = 'center';
-  if (resultData.match) {
-    ctx.fillStyle = COLORS.match;
-    ctx.fillText('MATCH  +1', canvas.width/2, canvas.height/2 - 6);
-  } else if (resultData.side === 'center') {
-    ctx.fillStyle = '#eab308';
-    ctx.fillText('CENTER  0', canvas.width/2, canvas.height/2 - 6);
-  } else {
-    ctx.fillStyle = COLORS.miss;
-    ctx.fillText('MISS  0', canvas.width/2, canvas.height/2 - 6);
-  }
-  ctx.restore();
-}
-
-function drawBlock(blk, px, py, color, alpha) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  blk.forEach(([bx,by]) => {
-    const dx = (px+bx)*CELL + 1;
-    const dy = canvas.height - (py+by+1)*CELL + 1;
-    if (dy < -CELL || dy > canvas.height + CELL) return;
-    ctx.fillStyle = color;
-    ctx.fillRect(dx, dy, CELL-2, CELL-2);
-    // top highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    ctx.fillRect(dx, dy, CELL-2, 3);
-    // subtle border
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(dx+0.5, dy+0.5, CELL-3, CELL-3);
-  });
-  ctx.restore();
-}
-
-// ─── Game flow ────────────────────────────────────────────────────────────────
-function startGame() {
-  document.getElementById('overlay').classList.add('hidden');
-  document.getElementById('btn-start').disabled = true;
-  document.getElementById('btn-restart').disabled = false;
-  scoreLeft = 0; scoreRight = 0;
-  curRound = 1; curTrial = 1;
-  histLog = [];
-  updateUI();
-  startTrial();
-}
-
-function restartGame() {
-  cancelAnimationFrame(fallAnim);
-  clearInterval(blinkTimer);
-  document.getElementById('ovScores').style.display = 'none';
-  document.getElementById('ovTitle').textContent = '共　生';
-  document.getElementById('ovSub').innerHTML = `重新开始？`;
-  document.getElementById('btn-start-overlay').textContent = '再来一局';
-  document.getElementById('overlay').classList.remove('hidden');
-  document.getElementById('btn-start').disabled = false;
-}
-
-function startTrial() {
-  inputEnabled = false;
-  opCounts = {ML:0,MR:0,RL:0,RR:0};
-  opLogItems = [];
-  updateOpList();
-
-  // Generate targets
-  const si = Math.floor(Math.random() * SHAPES.length);
-  baseBlock = SHAPES[si];
-  leftTgtAngle = Math.floor(Math.random() * 4);
-  rightTgtAngle = Math.floor(Math.random() * 4);
-  while (rightTgtAngle === leftTgtAngle) rightTgtAngle = Math.floor(Math.random() * 4);
-  leftTgt = normalize(rot90(baseBlock, leftTgtAngle));
-  rightTgt = normalize(rot90(baseBlock, rightTgtAngle));
-
-  updateUI();
-  setStatus('目标展示', '记住左右两个目标的形状！');
-  setPhasebar('blink');
-  blinkPhase();
-}
-
-function blinkPhase() {
-  gameState = 'blink';
-  blinkOn = true;
-  blinkTick = 0;
-  blinkTimer = setInterval(() => {
-    blinkOn = !blinkOn;
-    blinkTick++;
-    drawAll();
-    if (blinkTick >= BLINK_COUNT * 2) {
-      clearInterval(blinkTimer);
-      hidePhase();
-    }
-  }, BLINK_INTERVAL);
-  drawAll();
-}
-
-function hidePhase() {
-  gameState = 'hide';
-  blinkOn = false;
-  setPhasebar('hide');
-  setStatus('目标隐藏', '记忆窗口…方块即将出现');
-  drawAll();
-  setTimeout(spawnFalling, HIDE_DURATION);
-}
-
-function spawnFalling() {
-  gameState = 'falling';
-
-  // Random spawn
-  const offsets = [2,3,4,5,6,7];
-  const side = Math.random() < 0.5 ? -1 : 1;
-  const off = offsets[Math.floor(Math.random() * offsets.length)];
-  const center = Math.floor(GS/2) - 1;
-  curPos = Math.max(0, Math.min(GS-4, center + side * off));
-  curAngle = Math.floor(Math.random() * 4);
-  // ensure fits
-  if (!canPlace(curPos, curAngle)) { curAngle = 0; }
-  curPosY = ROWS_VISIBLE - 1;
-
-  inputEnabled = true;
-  setPhasebar('falling');
-  setStatus('方块下落', '玩家1: A/D 旋转  ·  玩家2: ← → 移动');
-  runFall();
-}
-
-function runFall() {
-  fallAnim = requestAnimationFrame(function step() {
-    if (gameState !== 'falling') return;
-    curPosY -= FALL_SPEED;
-    const rot = getRotated();
-    const minY = Math.min(...rot.map(c=>c[1]));
-    if (curPosY + minY <= 0) {
-      curPosY = -minY;
-      inputEnabled = false;
-      lockPiece();
-      return;
-    }
-    drawAll();
-    fallAnim = requestAnimationFrame(step);
-  });
-}
-
-function lockPiece() {
-  gameState = 'locking';
-  drawAll();
-  setTimeout(evaluateScore, LOCK_DELAY);
-}
-
-function evaluateScore() {
-  const rot = getRotated();
-  const cx = curPos + blockAvgX(rot);
-  const center = GS / 2;
-  let side, match;
-
-  if (cx < center - 2) {
-    side = 'left';
-    match = blockStr(rot) === blockStr(leftTgt) && Math.abs(Math.round(curPos) - LX) <= 1.5;
-    if (match) scoreLeft++;
-  } else if (cx > center + 2) {
-    side = 'right';
-    match = blockStr(rot) === blockStr(rightTgt) && Math.abs(Math.round(curPos) - RX) <= 1.5;
-    if (match) scoreRight++;
-  } else {
-    side = 'center'; match = false;
-  }
-
-  resultData = { side, match };
-  gameState = 'result';
-  setPhasebar('result');
-
-  const sideLabel = side === 'left' ? '左半场' : side === 'right' ? '右半场' : '中线区域';
-  if (match) {
-    setStatus('得分！', `落入${sideLabel}，形状匹配 ✓`);
-  } else {
-    setStatus('未得分', side === 'center' ? `落在中线，不计分` : `${sideLabel}：形状或位置不符`);
-  }
-
-  histLog.push({
-    round: curRound, trial: curTrial,
-    side, match,
-    ops: {...opCounts}
-  });
-  updateHist();
-  updateUI();
-  drawAll();
-
-  setTimeout(nextTrial, 1400);
-}
-
-function nextTrial() {
-  if (curTrial < TRIALS_PER_ROUND) {
-    curTrial++;
-    startTrial();
-  } else if (curRound < N_ROUNDS) {
-    curRound++;
-    curTrial = 1;
-    roundBreak();
-  } else {
-    endGame();
-  }
-}
-
-function roundBreak() {
-  gameState = 'roundbreak';
-  setPhasebar(null);
-  setStatus('轮次结束', `第 ${curRound-1} 轮完成，准备好后按任意键继续`);
-  drawAll();
-  const handler = (e) => {
-    if (['a','d','ArrowLeft','ArrowRight',' ','Enter'].includes(e.key)) {
-      window.removeEventListener('keydown', handler);
-      startTrial();
-    }
-  };
-  window.addEventListener('keydown', handler);
-}
-
-function endGame() {
-  gameState = 'gameover';
-  document.getElementById('ovTitle').textContent = '游戏结束';
-  document.getElementById('ovSub').textContent = `共 ${N_ROUNDS} 轮 × ${TRIALS_PER_ROUND} 试次`;
-  document.getElementById('ovL').textContent = scoreLeft;
-  document.getElementById('ovR').textContent = scoreRight;
-  document.getElementById('ovScores').style.display = 'flex';
-  document.getElementById('btn-start-overlay').textContent = '再来一局';
-  document.getElementById('overlay').classList.remove('hidden');
-}
-
-// ─── Input ────────────────────────────────────────────────────────────────────
-window.addEventListener('keydown', (e) => {
-  if (!inputEnabled || gameState !== 'falling') return;
-  let acted = false;
-  switch (e.key.toLowerCase()) {
-    case 'a': {
-      const na = (curAngle - 1 + 4) % 4;
-      if (canPlace(curPos, na)) {
-        curAngle = na; opCounts.RL++;
-        addOpLog('A 逆时针', '#aaa');
-        acted = true;
+    const trials = [
+      {
+        title: "试次1：熟悉分工",
+        hint: "模拟伙伴会稳定把方块移向左目标。你需要在下落时把形状转到左目标的方向。",
+        mode: "稳定配合",
+        block: "L",
+        targetSide: "left",
+        leftAngle: 1,
+        rightAngle: 3,
+        spawnX: 10,
+        speed: 1,
+        computer: "steady"
+      },
+      {
+        title: "试次2：伙伴先犹豫后修正",
+        hint: "模拟伙伴一开始会短暂向另一侧移动，然后修正到右目标。你需要观察它的移动并调整旋转。",
+        mode: "先犹豫",
+        block: "T",
+        targetSide: "right",
+        leftAngle: 2,
+        rightAngle: 1,
+        spawnX: 9,
+        speed: 1,
+        computer: "hesitate"
+      },
+      {
+        title: "试次3：速度稍快",
+        hint: "模拟伙伴会移向左目标，但下落稍快。你可能会感到时间压力，需要更快判断旋转方向。",
+        mode: "时间压力",
+        block: "S",
+        targetSide: "left",
+        leftAngle: 3,
+        rightAngle: 1,
+        spawnX: 11,
+        speed: 1.35,
+        computer: "steady"
+      },
+      {
+        title: "试次4：伙伴启动较慢",
+        hint: "模拟伙伴会稍晚开始移动。你可能会一边旋转，一边等待它是否会把方块移到目标侧。",
+        mode: "启动较慢",
+        block: "J",
+        targetSide: "right",
+        leftAngle: 1,
+        rightAngle: 2,
+        spawnX: 8,
+        speed: 1.1,
+        computer: "late"
+      },
+      {
+        title: "试次5：伙伴短暂偏向另一侧",
+        hint: "模拟伙伴会先靠近非目标侧，再转向左目标。你需要判断它的意图，并决定是否继续按当前方向旋转。",
+        mode: "短暂偏向",
+        block: "Z",
+        targetSide: "left",
+        leftAngle: 2,
+        rightAngle: 0,
+        spawnX: 10,
+        speed: 1.15,
+        computer: "hesitate"
+      },
+      {
+        title: "试次6：综合协作",
+        hint: "最后一个试次速度略快，模拟伙伴会移向右目标。请把刚才的配合、信任和调整体验带入后续量表。",
+        mode: "综合配合",
+        block: "L",
+        targetSide: "right",
+        leftAngle: 0,
+        rightAngle: 3,
+        spawnX: 9,
+        speed: 1.28,
+        computer: "steady"
       }
-      break;
-    }
-    case 'd': {
-      const na = (curAngle + 1) % 4;
-      if (canPlace(curPos, na)) {
-        curAngle = na; opCounts.RR++;
-        addOpLog('D 顺时针', '#aaa');
-        acted = true;
+    ];
+
+    const state = {
+      trialIndex: 0,
+      running: false,
+      showingTargets: false,
+      targetVisible: true,
+      completed: false,
+      successCount: 0,
+      pieceX: 10,
+      pieceY: 16,
+      angle: 0,
+      inputEnabled: false,
+      lastFall: 0,
+      targetBlinkTimer: null,
+      trialStart: 0,
+      rotateLeftCount: 0,
+      rotateRightCount: 0
+    };
+
+    function rotate(points, angle) {
+      let out = points.map(p => [...p]);
+      for (let i = 0; i < angle; i++) {
+        out = out.map(([x,y]) => [-y, x]);
+        const minX = Math.min(...out.map(p => p[0]));
+        const minY = Math.min(...out.map(p => p[1]));
+        out = out.map(([x,y]) => [x - minX, y - minY]);
       }
-      break;
+      return out;
     }
-    case 'arrowleft': {
-      if (canPlace(curPos - 1, curAngle)) {
-        curPos--; opCounts.ML++;
-        addOpLog('← 左移', '#3b82f6');
-        acted = true;
+
+    function normalized(points) {
+      const minX = Math.min(...points.map(p => p[0]));
+      const minY = Math.min(...points.map(p => p[1]));
+      return points.map(([x,y]) => [x - minX, y - minY])
+        .sort((a,b) => a[0] - b[0] || a[1] - b[1])
+        .map(p => p.join(",")).join(";");
+    }
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#fbfdff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#dce6f2";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= gridSize; i++) {
+        const x = i * cell;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, x);
+        ctx.lineTo(canvas.width, x);
+        ctx.stroke();
       }
-      e.preventDefault();
-      break;
+      ctx.strokeStyle = "#8c9aae";
+      ctx.setLineDash([8, 8]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "#607086";
+      ctx.font = "bold 14px Microsoft YaHei";
+      ctx.fillText("左目标区", 22, 25);
+      ctx.fillText("右目标区", canvas.width - 82, 25);
     }
-    case 'arrowright': {
-      if (canPlace(curPos + 1, curAngle)) {
-        curPos++; opCounts.MR++;
-        addOpLog('→ 右移', '#ef4444');
-        acted = true;
+
+    function drawBlock(points, x, y, fill, stroke = "#111827", alpha = 1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      for (const [px, py] of points) {
+        const gx = (x + px) * cell;
+        const gy = canvas.height - (y + py + 1) * cell;
+        ctx.fillStyle = fill;
+        ctx.fillRect(gx + 2, gy + 2, cell - 4, cell - 4);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(gx + 2, gy + 2, cell - 4, cell - 4);
       }
-      e.preventDefault();
-      break;
+      ctx.restore();
     }
-  }
-  if (acted) { updateOpCounts(); drawAll(); }
-});
 
-function addOpLog(text, color) {
-  opLogItems.unshift({text, color});
-  if (opLogItems.length > 6) opLogItems.pop();
-  updateOpList();
-}
+    function drawTargets(trial, visible) {
+      if (!visible) return;
+      const base = blocks[trial.block];
+      drawBlock(rotate(base, trial.leftAngle), 3, 0, "#171a20");
+      drawBlock(rotate(base, trial.rightAngle), 15, 0, "#171a20");
+    }
 
-function updateOpList() {
-  const el = document.getElementById('opList');
-  if (!opLogItems.length) {
-    el.innerHTML = '<li class="op-item"><span class="op-dot" style="background:var(--muted)"></span><span>等待操作</span></li>';
-    return;
-  }
-  el.innerHTML = opLogItems.map((op, i) => `
-    <li class="op-item" style="opacity:${1 - i*0.15};color:${op.color}">
-      <span class="op-dot" style="background:${op.color}"></span>
-      <span>${op.text}</span>
-    </li>`).join('');
-}
+    function currentTrial() {
+      return trials[state.trialIndex];
+    }
 
-function updateOpCounts() {
-  // shown in op-list
-}
+    function drawHUDMessage() {
+      const trial = currentTrial();
+      if (state.showingTargets) {
+        ctx.fillStyle = "rgba(255,255,255,0.88)";
+        ctx.fillRect(88, 75, 384, 62);
+        ctx.strokeStyle = "#cad7e6";
+        ctx.strokeRect(88, 75, 384, 62);
+        ctx.fillStyle = "#172033";
+        ctx.font = "bold 17px Microsoft YaHei";
+        ctx.fillText("请记住左右两个目标形状和位置", 118, 111);
+      } else if (state.running) {
+        ctx.fillStyle = "rgba(255,255,255,0.88)";
+        ctx.fillRect(72, 75, 420, 72);
+        ctx.strokeStyle = "#cad7e6";
+        ctx.strokeRect(72, 75, 420, 72);
+        ctx.fillStyle = "#245f9f";
+        ctx.font = "bold 16px Microsoft YaHei";
+        ctx.fillText("你：A/D或按钮旋转", 96, 105);
+        ctx.fillStyle = "#a86613";
+        ctx.fillText("伙伴：左右移动", 96, 130);
+        ctx.fillStyle = "#607086";
+        ctx.font = "13px Microsoft YaHei";
+        ctx.fillText(`伙伴策略：${trial.mode}`, 246, 130);
+      }
+    }
 
-// ─── UI helpers ───────────────────────────────────────────────────────────────
-function setStatus(phase, msg) {
-  document.getElementById('sPhase').textContent = phase;
-  document.getElementById('sMsg').textContent = msg;
-}
+    function render() {
+      const trial = currentTrial();
+      drawGrid();
+      drawTargets(trial, state.targetVisible);
+      if (state.running && !state.showingTargets) {
+        drawBlock(rotate(blocks[trial.block], state.angle), state.pieceX, state.pieceY, "#245f9f");
+      }
+      drawHUDMessage();
+    }
 
-function setPhasebar(phase) {
-  const segs = ['ph0','ph1','ph2','ph3'];
-  const map = { blink:0, hide:1, falling:2, result:3 };
-  segs.forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.className = 'phase-seg';
-    if (phase === null) return;
-    const idx = map[phase] ?? -1;
-    if (i < idx) el.classList.add('done');
-    else if (i === idx) el.classList.add('active');
-  });
-}
+    function updateSidebar() {
+      const trial = currentTrial();
+      trialTitle.textContent = trial.title;
+      trialHint.textContent = trial.hint;
+      trialNo.textContent = `${state.trialIndex + 1} / ${trials.length}`;
+      successCountEl.textContent = String(state.successCount);
+      computerMode.textContent = trial.mode;
+      for (let i = 0; i < trials.length; i++) {
+        document.getElementById(`trialItem${i}`).classList.toggle("active", i === state.trialIndex);
+      }
+    }
 
-function updateUI() {
-  document.getElementById('scoreLeft').textContent = scoreLeft;
-  document.getElementById('scoreRight').textContent = scoreRight;
-  document.getElementById('curRound').textContent = curRound;
-  document.getElementById('totalRounds').textContent = N_ROUNDS;
-  document.getElementById('curTrial').textContent = curTrial;
-  document.getElementById('totalTrials').textContent = TRIALS_PER_ROUND;
-}
+    function showOverlay(title, text, buttonText = "继续") {
+      overlayTitle.textContent = title;
+      overlayText.textContent = text;
+      startBtn.textContent = buttonText;
+      overlay.classList.add("show");
+    }
 
-function updateHist() {
-  const el = document.getElementById('histList');
-  if (!histLog.length) { el.textContent = '—'; return; }
-  el.innerHTML = histLog.slice(-6).reverse().map(h => {
-    const sc = h.side==='left'?'#3b82f6':h.side==='right'?'#ef4444':'#eab308';
-    const ss = h.side==='left'?'左':h.side==='right'?'右':'中';
-    const badge = h.match
-      ? `<span style="color:#22c55e">+1</span>`
-      : `<span style="color:var(--muted)">0</span>`;
-    return `<div class="hist-item">
-      <span style="color:var(--muted)">R${h.round}-T${h.trial}</span>
-      <span style="color:${sc};font-size:11px">${ss}场</span>
-      ${badge}
-    </div>`;
-  }).join('');
-}
+    function hideOverlay() {
+      overlay.classList.remove("show");
+    }
 
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-initCanvas();
-drawAll();
-</script>
+    function resetPiece() {
+      const trial = currentTrial();
+      state.pieceX = trial.spawnX;
+      state.pieceY = 16;
+      state.angle = 0;
+      state.rotateLeftCount = 0;
+      state.rotateRightCount = 0;
+      state.lastFall = performance.now();
+      state.trialStart = performance.now();
+      state.inputEnabled = false;
+    }
+
+    function beginTrial() {
+      hideOverlay();
+      state.completed = false;
+      updateSidebar();
+      resetPiece();
+      state.running = true;
+      state.showingTargets = true;
+      state.targetVisible = true;
+      render();
+      let blinks = 0;
+      clearInterval(state.targetBlinkTimer);
+      state.targetBlinkTimer = setInterval(() => {
+        state.targetVisible = !state.targetVisible;
+        blinks += 1;
+        render();
+        if (blinks >= 6) {
+          clearInterval(state.targetBlinkTimer);
+          state.targetVisible = false;
+          state.showingTargets = false;
+          state.inputEnabled = true;
+          state.lastFall = performance.now();
+          render();
+          requestAnimationFrame(loop);
+        }
+      }, 320);
+    }
+
+    function computerMove(trial) {
+      const elapsed = (performance.now() - state.trialStart) / 1000;
+      let targetX = trial.targetSide === "left" ? 3 : 15;
+      if (trial.computer === "late" && elapsed < 1.65) {
+        targetX = state.pieceX + 1;
+      }
+      if (trial.computer === "hesitate" && elapsed < 2.2) {
+        targetX = trial.targetSide === "left" ? 15 : 3;
+      }
+      const centerX = state.pieceX + 1;
+      if (centerX < targetX) state.pieceX += 0.08;
+      if (centerX > targetX) state.pieceX -= 0.08;
+      state.pieceX = Math.max(0, Math.min(18, state.pieceX));
+    }
+
+    function loop(now) {
+      if (!state.running || state.showingTargets) return;
+      const trial = currentTrial();
+      computerMove(trial);
+      if (now - state.lastFall > fallInterval / trial.speed) {
+        state.pieceY -= 0.32;
+        state.lastFall = now;
+      }
+      if (state.pieceY <= 0) {
+        state.pieceY = 0;
+        finishTrial();
+        return;
+      }
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    function finishTrial() {
+      const trial = currentTrial();
+      state.running = false;
+      state.inputEnabled = false;
+      const targetAngle = trial.targetSide === "left" ? trial.leftAngle : trial.rightAngle;
+      const finalShape = normalized(rotate(blocks[trial.block], state.angle));
+      const targetShape = normalized(rotate(blocks[trial.block], targetAngle));
+      const targetX = trial.targetSide === "left" ? 3 : 15;
+      const xOk = Math.abs(Math.round(state.pieceX) - targetX) <= 2;
+      const shapeOk = finalShape === targetShape;
+      const success = xOk && shapeOk;
+      if (success) state.successCount += 1;
+      updateSidebar();
+      state.targetVisible = true;
+      render();
+
+      const resultText = success
+        ? "配合成功：模拟伙伴移动到了目标侧，你也把方块转到了目标方向。"
+        : `这次没有完全成功：${xOk ? "位置基本对了" : "伙伴/位置没有到目标侧"}，${shapeOk ? "形状方向对了" : "旋转方向还没匹配目标"}。`;
+      const reflection = success
+        ? "请留意：成功时，你是否感觉自己依赖了伙伴的移动？是否更愿意信任它？"
+        : "请留意：没有成功时，你是否会怀疑伙伴的移动？是否想改变自己的策略？是否产生压力或不满？";
+      const isLast = state.trialIndex === trials.length - 1;
+      showOverlay(
+        success ? "本试次成功" : "本试次结束",
+        `${resultText} ${reflection}`,
+        isLast ? "查看结束说明" : `开始试次${state.trialIndex + 2}`
+      );
+    }
+
+    function nextAction() {
+      if (state.running) return;
+      if (overlayTitle.textContent === "开始前请先理解分工") {
+        beginTrial();
+        return;
+      }
+      if (state.trialIndex < trials.length - 1) {
+        state.trialIndex += 1;
+        beginTrial();
+      } else {
+        state.completed = true;
+        showOverlay(
+          "体验完成，可以填写量表",
+          "你刚才体验了一个模拟双人协作任务：你负责旋转，模拟伙伴负责左右移动。你可能已经感受到配合、依赖、信任判断、策略调整和压力。请根据这种体验回答后续量表。",
+          "重新开始6个试次"
+        );
+        state.trialIndex = 0;
+      }
+    }
+
+    function rotateBy(direction) {
+      if (!state.inputEnabled) return;
+      if (direction === "left") {
+        state.angle = (state.angle + 3) % 4;
+        state.rotateLeftCount += 1;
+        render();
+      }
+      if (direction === "right") {
+        state.angle = (state.angle + 1) % 4;
+        state.rotateRightCount += 1;
+        render();
+      }
+    }
+
+    document.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      if (key === "a") {
+        rotateBy("left");
+      }
+      if (key === "d") {
+        rotateBy("right");
+      }
+    });
+
+    rotateLeftBtn.addEventListener("click", () => rotateBy("left"));
+    rotateRightBtn.addEventListener("click", () => rotateBy("right"));
+    rotateLeftBtn.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      rotateBy("left");
+    }, { passive: false });
+    rotateRightBtn.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      rotateBy("right");
+    }, { passive: false });
+
+    startBtn.addEventListener("click", () => {
+      if (state.completed) {
+        state.trialIndex = 0;
+        state.successCount = 0;
+        state.completed = false;
+        updateSidebar();
+        beginTrial();
+      } else {
+        nextAction();
+      }
+    });
+
+    demoBtn.addEventListener("click", () => {
+      state.running = false;
+      state.showingTargets = false;
+      state.targetVisible = true;
+      resetPiece();
+      render();
+      showOverlay(
+        "开始前请先理解分工",
+        "这个体验模拟“你和另一名参与者合作”的实验范式：一个下落方块由两方共同控制。你负责旋转，模拟伙伴负责左右移动。目标会先闪现，然后隐藏。",
+        `开始试次${state.trialIndex + 1}`
+      );
+    });
+
+    updateSidebar();
+    resetPiece();
+    render();
+  </script>
 </body>
 </html>
