@@ -388,7 +388,7 @@
     <header>
       <div>
         <h1>模拟双人协作俄罗斯方块：6个小试次体验</h1>
-      <p class="subtitle">你只负责旋转，模拟伙伴负责左右移动。你们共同控制同一个下落方块：落到左侧是你的得分区域，落到右侧是系统的得分区域。</p>
+      <p class="subtitle">你只负责旋转，模拟伙伴负责左右移动。你们共同控制同一个下落方块：落到左侧是你的得分区域，落到右侧是伙伴的得分区域。</p>
       </div>
       <div class="badge">施测前情境体验版</div>
     </header>
@@ -403,7 +403,7 @@
           <div class="scorebox">
             <div class="score"><span>当前试次</span><b id="trialNo">1 / 3</b></div>
             <div class="score"><span>你的得分</span><b id="ownScore">0</b></div>
-            <div class="score"><span>系统得分</span><b id="systemScore">0</b></div>
+            <div class="score"><span>伙伴得分</span><b id="systemScore">0</b></div>
             <div class="score"><span>伙伴策略</span><b id="computerMode">稳定配合</b></div>
           </div>
         </div>
@@ -412,7 +412,7 @@
           <aside class="legend">
             <div class="role you"><b>你</b><span>只控制旋转：电脑端用 <span class="kbd">A</span>/<span class="kbd">D</span>，手机点下方两个旋转按钮。</span></div>
             <div class="role computer"><b>模拟伙伴</b><span>只控制左右移动。你不能直接移动方块位置。</span></div>
-            <div class="role goal"><b>协作中的竞争</b><span>左侧是你的得分区域，右侧是系统得分区域；伙伴移动会影响最后落在哪一侧。</span></div>
+            <div class="role goal"><b>协作中的竞争</b><span>左侧是你的得分区域，右侧是伙伴得分区域；伙伴移动会影响最后落在哪一侧。</span></div>
           </aside>
 
           <div class="board-wrap">
@@ -444,7 +444,7 @@
         </div>
         <div class="instruction">
           <b>存在轻微竞争/个人表现感。</b><br>
-          屏幕左侧是你的得分区域，右侧是系统得分区域。你可能会关注“伙伴是不是在按我期待的方向移动”“最后得分会落到哪一侧”。
+          屏幕左侧是你的得分区域，右侧是伙伴得分区域。你可能会关注“伙伴是不是在按我期待的方向移动”“最后得分会落到哪一侧”。
         </div>
 
         <h3>6个小试次</h3>
@@ -504,7 +504,7 @@
       },
       {
         title: "试次2：伙伴先犹豫后修正",
-        hint: "右侧是系统得分区域。模拟伙伴一开始会短暂向左侧移动，然后修正到右侧，你需要观察它的移动并调整旋转。",
+        hint: "右侧是伙伴得分区域。模拟伙伴一开始会短暂向左侧移动，然后修正到右侧，你需要观察它的移动并调整旋转。",
         mode: "先犹豫",
         block: "T",
         targetSide: "right",
@@ -528,7 +528,7 @@
       },
       {
         title: "试次4：伙伴启动较慢",
-        hint: "右侧是系统得分区域。模拟伙伴会稍晚开始移动，你可能会一边旋转，一边等待它是否把方块带向系统得分区。",
+        hint: "右侧是伙伴得分区域。模拟伙伴会稍晚开始移动，你可能会一边旋转，一边等待它是否把方块带向伙伴得分区。",
         mode: "启动较慢",
         block: "J",
         targetSide: "right",
@@ -540,7 +540,7 @@
       },
       {
         title: "试次5：伙伴短暂偏向另一侧",
-        hint: "左侧是你的得分区域。模拟伙伴会先靠近右侧系统得分区，再转向左侧，你需要判断它的意图。",
+        hint: "左侧是你的得分区域。模拟伙伴会先靠近右侧伙伴得分区，再转向左侧，你需要判断它的意图。",
         mode: "短暂偏向",
         block: "Z",
         targetSide: "left",
@@ -552,7 +552,7 @@
       },
       {
         title: "试次6：综合协作",
-        hint: "最后一个试次速度略快，模拟伙伴会移向右侧系统得分区。请把刚才的配合、竞争、信任和调整体验带入后续量表。",
+        hint: "最后一个试次速度略快，模拟伙伴会移向右侧伙伴得分区。请把刚才的配合、竞争、信任和调整体验带入后续量表。",
         mode: "综合配合",
         block: "L",
         targetSide: "right",
@@ -639,7 +639,7 @@
       ctx.fillStyle = "#245f9f";
       ctx.fillText("左侧：你的得分区域", 22, 25);
       ctx.fillStyle = "#a86613";
-      ctx.fillText("右侧：系统得分区域", canvas.width - 140, 25);
+      ctx.fillText("右侧：伙伴得分区域", canvas.width - 140, 25);
     }
 
     function drawBlock(points, x, y, fill, stroke = "#111827", alpha = 1) {
@@ -821,7 +821,7 @@
       render();
 
       const resultText = success
-        ? `配合成功：方块落入${trial.targetSide === "left" ? "你的得分区域" : "系统得分区域"}，并且形状方向匹配目标。`
+        ? `配合成功：方块落入${trial.targetSide === "left" ? "你的得分区域" : "伙伴得分区域"}，并且形状方向匹配目标。`
         : `这次没有完全成功：${xOk ? "位置基本对了" : "伙伴/位置没有到目标侧"}，${shapeOk ? "形状方向对了" : "旋转方向还没匹配目标"}。`;
       const reflection = success
         ? "请留意：成功时，你是否感觉自己依赖了伙伴的移动？是否更愿意信任它？"
@@ -847,7 +847,7 @@
         state.completed = true;
         showOverlay(
           "体验完成，请继续填写量表",
-          "你已经完成6个模拟双人协作小试次。请注意：左侧代表你的得分区域，右侧代表系统得分区域。接下来请拉到问卷页面底部，点击右箭头继续，进入后续量表题目。回答时请以刚才的协作与竞争体验为参照。",
+          "你已经完成6个模拟双人协作小试次。请注意：左侧代表你的得分区域，右侧代表伙伴得分区域。接下来请拉到问卷页面底部，点击右箭头继续，进入后续量表题目。回答时请以刚才的协作与竞争体验为参照。",
           "我知道了"
         );
         state.trialIndex = 0;
